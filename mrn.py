@@ -2,7 +2,6 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-
 class Backbone_Block(nn.Module):
     def __init__(self, in_c, out_c, k_size, stride, padding):
         super().__init__()
@@ -68,7 +67,7 @@ class MRN(nn.Module):
         self.output2 = nn.Softmax()
 
     def encoder(self, x, context=None, skip=None):
-        # x = x[:,1,...] if context else x[:,0,...]
+        x = x[:,1,...] if context else x[:,0,...]
         x11_1 = self.block11_1(x)
         if skip == 1:
             return x11_1
