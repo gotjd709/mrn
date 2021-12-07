@@ -2,6 +2,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
+
 class Backbone_Block(nn.Module):
     def __init__(self, in_c, out_c, k_size, stride, padding):
         super().__init__()
