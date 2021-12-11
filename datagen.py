@@ -8,18 +8,29 @@ import cv2
 
 class PathSplit(object):
     def __init__(self, base_path=None):
-        self.BASE_PATH = base_path
+        self.BASE_PATH = glob.glob(base_path)
 
     def Split(self):
-        TRAIN_ZIP = shuffle([(x, 
-                      '/'.join(x.split('/')[:-2]) + '/input_x2/' + x.split('/')[-1], 
-                      '/'.join(x.split('/')[:-2]) + '/input_y1/' + x.split('/')[-1]) for x in sorted(glob.glob(self.BASE_PATH  + '/input_x1/*.png'))], random_state=321)[:int(0.60*len(glob.glob(self.BASE_PATH  + '/input_x1/*.png')))]
-        VALID_ZIP = shuffle([(x, 
-                      '/'.join(x.split('/')[:-2]) + '/input_x2/' + x.split('/')[-1], 
-                      '/'.join(x.split('/')[:-2]) + '/input_y1/' + x.split('/')[-1]) for x in sorted(glob.glob(self.BASE_PATH  + '/input_x1/*.png'))], random_state=321)[int(0.60*len(glob.glob(self.BASE_PATH  + '/input_x1/*.png'))):int(0.80*len(glob.glob(self.BASE_PATH  + '/input_x1/*.png')))]
-        TEST_ZIP = shuffle([(x, 
-                      '/'.join(x.split('/')[:-2]) + '/input_x2/' + x.split('/')[-1], 
-                      '/'.join(x.split('/')[:-2]) + '/input_y1/' + x.split('/')[-1]) for x in sorted(glob.glob(self.BASE_PATH  + '/input_x1/*.png'))], random_state=321)[int(0.80*len(glob.glob(self.BASE_PATH  + '/input_x1/*.png'))):]
+        # split path
+        TRAIN_TARGET_PATH = shuffle(self.BASE_PATH, random_state=321)[:int(0.60*len(self.BASE_PATH))]
+        VALID_TARGET_PATH = shuffle(self.BASE_PATH, random_state=321)[int(0.60*len(self.BASE_PATH)):int(0.80*len(self.BASE_PATH))]
+        TEST_TARGET_PATH = shuffle(self.BASE_PATH, random_state=321)[int(0.80*len(self.BASE_PATH)):]      
+        # check train, valid, test length
+        print('TRAIN TOTAL :', len(TRAIN_TARGET_PATH))
+        print('VALID TOTAL :', len(VALID_TARGET_PATH))
+        print('TEST TOTAL :', len(TEST_TARGET_PATH))
+        TRAIN_ZIP = shuffle(
+        [('/'.join(x.split('/')[:-2])+'/input_x1/'+x.split('/')[-1], '/'.join(x.split('/')[:-2])+'/input_x2/'+x.split('/')[-1], x) for x in TRAIN_TARGET_PATH],
+            random_state=333
+        )
+        VALID_ZIP = shuffle(
+        [('/'.join(x.split('/')[:-2])+'/input_x1/'+x.split('/')[-1], '/'.join(x.split('/')[:-2])+'/input_x2/'+x.split('/')[-1], x) for x in VALID_TARGET_PATH],
+            random_state=333
+        )
+        TEST_ZIP = shuffle(
+        [('/'.join(x.split('/')[:-2])+'/input_x1/'+x.split('/')[-1], '/'.join(x.split('/')[:-2])+'/input_x2/'+x.split('/')[-1], x) for x in TEST_TARGET_PATH],
+            random_state=333
+        )
         return TRAIN_ZIP, VALID_ZIP, TEST_ZIP
 
 class PathToDataset(object):

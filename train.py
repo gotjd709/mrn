@@ -13,7 +13,7 @@ Options:
     --version   Show version
 
 """
-from mrn                             import mrn
+from mrn                             import mrn, mrn_seresnext101
 from datagen                         import PathSplit, PathToDataset, TensorData
 from functional                      import name_weight
 from torchsampler                    import ImbalancedDatasetSampler
@@ -32,6 +32,7 @@ import cv2
 ### Argparse Setting
 parser = argparse.ArgumentParser()
 parser.add_argument('--BASE_PATH', type=str, required=True, help='Input the patch path. It should be like ../slideset/patientnum/mask/patches.png.')
+parser.add_argument('--BACKBONE', type=str, required=True, help='Select the backbone model of MRN')
 parser.add_argument('--BATCH_SIZE', default=4, type=int, required=False, help='Input the batch size.')
 parser.add_argument('--CLASSES', default=3, type=int, required=True, help='Input the class of the patches. It should be 1 or >2.')
 parser.add_argument('--EPOCHS', default=40, type=int, required=False, help='Input the epoches.')
@@ -40,6 +41,7 @@ args = parser.parse_args()
 
 ### Argparse to Variable
 BASE_PATH = args.BASE_PATH
+BACKBONE = args.BACKBONE
 BATCH_SIZE = args.BATCH_SIZE
 CLASSES = args.CLASSES
 EPOCHS = args.EPOCHS
@@ -51,9 +53,14 @@ device = "cuda" if GPU and torch.cuda.is_available() else "cpu"
 print(f'Using device {device}')
 
 ### Model Setting 
-model = mrn(in_channels=3, class_num=CLASSES)
-# model = torch.nn.DataParallel(model, device_ids=[0,1]) 
-model.cuda()
+if BACKBONE == 'vgg16':
+    model = mrn(in_channels=3, class_num=CLASSES)
+    # model = torch.nn.DataParallel(model, device_ids=[0,1]) 
+    model.cuda()
+elif BACKBONE == 'seresnext101':
+    model = mrn_seresnext101(class_num=CLASSES, pretrained=None)
+    # model = torch.nn.DataParallel(model, device_ids=[0,1]) 
+    model.cuda()
 
 # Path Setting
 Path = PathSplit(BASE_PATH)
@@ -73,7 +80,7 @@ test_data = TensorData(test_x, test_y, test_ph)
 ### DataLoader
 train_loader = torch.utils.data.DataLoader(
     train_data,
-    # sampler=ImbalancedDatasetSampler(train_data),
+    sampler=ImbalancedDatasetSampler(train_data),
     batch_size=BATCH_SIZE,
     shuffle=False
 )
