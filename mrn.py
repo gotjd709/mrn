@@ -180,7 +180,7 @@ class SENet(nn.Module):
 
     def __init__(self, block, layers, groups, reduction, dropout_p=0.2,
                  inplanes=128, input_3x3=True, downsample_kernel_size=3,
-                 downsample_padding=1, class_num=3):
+                 downsample_padding=1, class_num=3, multiple=1):
         """
         Parameters
         ----------
@@ -225,6 +225,9 @@ class SENet(nn.Module):
             - For all models: 1000
         """
         super(SENet, self).__init__()
+        self.multiple = multiple
+        self.resize_list_origin = [4, 8, 16, 32, 64]
+        self.resize_list = [i//self.multiple for i in self.resize_list_origin]
         self.inplanes = inplanes
         if input_3x3:
             layer0_modules = [
@@ -361,14 +364,14 @@ class SENet(nn.Module):
         x51 = self.encoder(x)
         x52 = self.ident52(x51)
         y51 = self.encoder(x, context=True)
-        y52 = F.interpolate(y51[:, :, y51.shape[2]//2-4:y51.shape[2]//2+4, y51.shape[3]//2-4:y51.shape[3]//2+4], size=16)
+        y52 = F.interpolate(y51[:, :, y51.shape[2]//2-self.resize_list[0]:y51.shape[2]//2+self.resize_list[0], y51.shape[3]//2-self.resize_list[0]:y51.shape[3]//2+self.resize_list[0]], size=16)
         x5 = torch.cat([x52, y52], dim=1)
 
         x42_1 = self.trans42_1(x5)
         x42_2 = self.ident42_2(x42_1)
         y41_1 = self.encoder(x, skip=4)
         y42_1 = self.encoder(x, context=True, skip=4)
-        y42_2 = F.interpolate(y42_1[:, :, y42_1.shape[2]//2-8:y42_1.shape[2]//2+8, y42_1.shape[3]//2-8:y42_1.shape[3]//2+8], size=32)
+        y42_2 = F.interpolate(y42_1[:, :, y42_1.shape[2]//2-self.resize_list[1]:y42_1.shape[2]//2+self.resize_list[1], y42_1.shape[3]//2-self.resize_list[1]:y42_1.shape[3]//2+self.resize_list[1]], size=32)
         x4 = torch.cat([x42_2, y41_1, y42_2], dim=1)
         x42_3 = self.block42_3(x4)
 
@@ -376,7 +379,7 @@ class SENet(nn.Module):
         x32_2 = self.ident32_2(x32_1)
         y31_1 = self.encoder(x, skip=3)
         y32_1 = self.encoder(x, context=True, skip=3)
-        y32_2 = F.interpolate(y32_1[:, :, y32_1.shape[2]//2-16:y32_1.shape[2]//2+16, y32_1.shape[3]//2-16:y32_1.shape[3]//2+16], size=64)
+        y32_2 = F.interpolate(y32_1[:, :, y32_1.shape[2]//2-self.resize_list[2]:y32_1.shape[2]//2+self.resize_list[2], y32_1.shape[3]//2-self.resize_list[2]:y32_1.shape[3]//2+self.resize_list[2]], size=64)
         x3 = torch.cat([x32_2, y31_1, y32_2], dim=1)
         x32_3 = self.block32_3(x3)
         
@@ -384,7 +387,7 @@ class SENet(nn.Module):
         x22_2 = self.ident22_2(x22_1)
         y21_1 = self.encoder(x, skip=2)
         y22_1 = self.encoder(x, context=True, skip=2)
-        y22_2 = F.interpolate(y22_1[:, :, y22_1.shape[2]//2-32:y22_1.shape[2]//2+32, y22_1.shape[3]//2-32:y22_1.shape[3]//2+32], size=128)
+        y22_2 = F.interpolate(y22_1[:, :, y22_1.shape[2]//2-self.resize_list[3]:y22_1.shape[2]//2+self.resize_list[3], y22_1.shape[3]//2-self.resize_list[3]:y22_1.shape[3]//2+self.resize_list[3]], size=128)
         x2 = torch.cat([x22_2, y21_1, y22_2], dim=1)
         x22_3 = self.block22_3(x2)
 
@@ -392,7 +395,7 @@ class SENet(nn.Module):
         x12_2 = self.ident12_2(x12_1)
         y11_1 = self.encoder(x, skip=1)
         y12_1 = self.encoder(x, context=True, skip=1)
-        y12_2 = F.interpolate(y12_1[:, :, y12_1.shape[2]//2-64:y12_1.shape[2]//2+64, y12_1.shape[3]//2-64:y12_1.shape[3]//2+64], size=256)
+        y12_2 = F.interpolate(y12_1[:, :, y12_1.shape[2]//2-self.resize_list[4]:y12_1.shape[2]//2+self.resize_list[4], y12_1.shape[3]//2-self.resize_list[4]:y12_1.shape[3]//2+self.resize_list[4]], size=256)
         x1 = torch.cat([x12_2, y11_1, y12_2], dim=1)
         x12_3 = self.block12_3(x1)
         
@@ -415,19 +418,22 @@ def initialize_pretrained_model(model, num_classes, settings):
     model.mean = settings['mean']
     model.std = settings['std']
 
-def mrn_seresnext101(class_num, pretrained=None):
+def mrn_seresnext101(class_num, multiple, pretrained=None):
     model = SENet(SEResNeXtBottleneck, [3, 4, 23, 3], groups=32, reduction=16,
                   dropout_p=None, inplanes=64, input_3x3=False,
                   downsample_kernel_size=1, downsample_padding=0,
-                  class_num=class_num)
+                  class_num=class_num, multiple=multiple)
     if pretrained is not None:
         settings = pretrained_settings['se_resnext101_32x4d'][pretrained]
         initialize_pretrained_model(model, num_classes, settings)
     return model
 
 class MRN(nn.Module):
-    def __init__(self, in_channels, class_num):
+    def __init__(self, in_channels=3, class_num=3, multiple=1):
         super().__init__()
+        self.multiple = multiple
+        self.resize_list_origin = [8, 16, 32, 64, 128]
+        self.resize_list = [i//self.multiple for i in self.resize_list_origin]
         self.block11_1 = Backbone_Block(in_channels, 16, 3, 1, 1)
         self.maxp11_2 = nn.MaxPool2d(2, 2, 0)
 
@@ -492,14 +498,14 @@ class MRN(nn.Module):
         x51 = self.encoder(x)
         x52 = self.ident52(x51)
         y51 = self.encoder(x, context=True)
-        y52 = F.interpolate(y51[:, :, y51.shape[2]//2-8:y51.shape[2]//2+8, y51.shape[3]//2-8:y51.shape[3]//2+8], size=32)
+        y52 = F.interpolate(y51[:, :, y51.shape[2]//2-self.resize_list[0]:y51.shape[2]//2+self.resize_list[0], y51.shape[3]//2-self.resize_list[0]:y51.shape[3]//2+self.resize_list[0]], size=32)
         x5 = torch.cat([x52, y52], dim=1)
 
         x42_1 = self.trans42_1(x5)
         x42_2 = self.ident42_2(x42_1)
         y41_1 = self.encoder(x, skip=4)
         y42_1 = self.encoder(x, context=True, skip=4)
-        y42_2 = F.interpolate(y42_1[:, :, y42_1.shape[2]//2-16:y42_1.shape[2]//2+16, y42_1.shape[3]//2-16:y42_1.shape[3]//2+16], size=64)
+        y42_2 = F.interpolate(y42_1[:, :, y42_1.shape[2]//2-self.resize_list[1]:y42_1.shape[2]//2+self.resize_list[1], y42_1.shape[3]//2-self.resize_list[1]:y42_1.shape[3]//2+self.resize_list[1]], size=64)
         x4 = torch.cat([x42_2, y41_1, y42_2], dim=1)
         x42_3 = self.block42_3(x4)
 
@@ -507,7 +513,7 @@ class MRN(nn.Module):
         x32_2 = self.ident32_2(x32_1)
         y31_1 = self.encoder(x, skip=3)
         y32_1 = self.encoder(x, context=True, skip=3)
-        y32_2 = F.interpolate(y32_1[:, :, y32_1.shape[2]//2-32:y32_1.shape[2]//2+32, y32_1.shape[3]//2-32:y32_1.shape[3]//2+32], size=128)
+        y32_2 = F.interpolate(y32_1[:, :, y32_1.shape[2]//2-self.resize_list[2]:y32_1.shape[2]//2+self.resize_list[2], y32_1.shape[3]//2-self.resize_list[2]:y32_1.shape[3]//2+self.resize_list[2]], size=128)
         x3 = torch.cat([x32_2, y31_1, y32_2], dim=1)
         x32_3 = self.block32_3(x3)
         
@@ -515,7 +521,7 @@ class MRN(nn.Module):
         x22_2 = self.ident22_2(x22_1)
         y21_1 = self.encoder(x, skip=2)
         y22_1 = self.encoder(x, context=True, skip=2)
-        y22_2 = F.interpolate(y22_1[:, :, y22_1.shape[2]//2-64:y22_1.shape[2]//2+64, y22_1.shape[3]//2-64:y22_1.shape[3]//2+64], size=256)
+        y22_2 = F.interpolate(y22_1[:, :, y22_1.shape[2]//2-self.resize_list[3]:y22_1.shape[2]//2+self.resize_list[3], y22_1.shape[3]//2-self.resize_list[3]:y22_1.shape[3]//2+self.resize_list[3]], size=256)
         x2 = torch.cat([x22_2, y21_1, y22_2], dim=1)
         x22_3 = self.block22_3(x2)
 
@@ -523,7 +529,7 @@ class MRN(nn.Module):
         x12_2 = self.ident12_2(x12_1)
         y11_1 = self.encoder(x, skip=1)
         y12_1 = self.encoder(x, context=True, skip=1)
-        y12_2 = F.interpolate(y12_1[:, :, y12_1.shape[2]//2-128:y12_1.shape[2]//2+128, y12_1.shape[3]//2-128:y12_1.shape[3]//2+128], size=512)
+        y12_2 = F.interpolate(y12_1[:, :, y12_1.shape[2]//2-self.resize_list[4]:y12_1.shape[2]//2+self.resize_list[4], y12_1.shape[3]//2-self.resize_list[4]:y12_1.shape[3]//2+self.resize_list[4]], size=512)
         x1 = torch.cat([x12_2, y11_1, y12_2], dim=1)
         x12_3 = self.block12_3(x1)
 
@@ -531,5 +537,5 @@ class MRN(nn.Module):
         output2 = self.output2(output1)
         return output2
 
-def mrn(in_channels, class_num):
-    return MRN(in_channels, class_num)
+def mrn(in_channels, class_num, multiple):
+    return MRN(in_channels, class_num, multiple)

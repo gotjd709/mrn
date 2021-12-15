@@ -18,6 +18,7 @@ from datagen                         import PathSplit, PathToDataset, TensorData
 from functional                      import name_weight
 from torchsampler                    import ImbalancedDatasetSampler
 from torch.utils.data                import DataLoader
+from torch.utils.tensorboard         import SummaryWriter
 import segmentation_models_pytorch   as smp
 import matplotlib.pyplot             as plt
 import pandas                        as pd
@@ -35,7 +36,8 @@ parser.add_argument('--BASE_PATH', type=str, required=True, help='Input the patc
 parser.add_argument('--BACKBONE', type=str, required=True, help='Select the backbone model of MRN')
 parser.add_argument('--BATCH_SIZE', default=4, type=int, required=False, help='Input the batch size.')
 parser.add_argument('--CLASSES', default=3, type=int, required=True, help='Input the class of the patches. It should be 1 or >2.')
-parser.add_argument('--EPOCHS', default=40, type=int, required=False, help='Input the epoches.')
+parser.add_argument('--MULTIPLE', default=1, type=int, required=False, help='Input the value of (context_mpp)/(target_mpp*2).')
+parser.add_argument('--EPOCHS', default=50, type=int, required=False, help='Input the epoches.')
 parser.add_argument('--DESCRIPTION', type=str, required=True, help='Input the description of your trials briefly.')
 args = parser.parse_args()
 
@@ -44,6 +46,7 @@ BASE_PATH = args.BASE_PATH
 BACKBONE = args.BACKBONE
 BATCH_SIZE = args.BATCH_SIZE
 CLASSES = args.CLASSES
+MULTIPLE = args.MULTIPLE
 EPOCHS = args.EPOCHS
 DESCRIPTION = args.DESCRIPTION
 
@@ -54,16 +57,16 @@ print(f'Using device {device}')
 
 ### Model Setting 
 if BACKBONE == 'vgg16':
-    model = mrn(in_channels=3, class_num=CLASSES)
+    model = mrn(in_channels=3, class_num=CLASSES, multiple=MULTIPLE)
     # model = torch.nn.DataParallel(model, device_ids=[0,1]) 
     model.cuda()
 elif BACKBONE == 'seresnext101':
-    model = mrn_seresnext101(class_num=CLASSES, pretrained=None)
+    model = mrn_seresnext101(class_num=CLASSES, pretrained=None, multiple=MULTIPLE)
     # model = torch.nn.DataParallel(model, device_ids=[0,1]) 
     model.cuda()
 
 # Path Setting
-Path = PathSplit(BASE_PATH)
+Path = PathSplit(BASE_PATH, MULTIPLE)
 TRAIN_ZIP, VALID_ZIP, TEST_ZIP = Path.Split()
 
 # Dataset, DataLoader Customizing
@@ -119,18 +122,35 @@ valid_epoch = smp.utils.train.ValidEpoch(
     verbose=True,
 )
 weight = name_weight(frame='pytorch', classes=CLASSES, description=DESCRIPTION)
+dataiter = iter(train_loader)
+images, labels = dataiter.next()
+
+### Using Tensorboard
+writer = SummaryWriter(log_dir='../../log/MRN_se', filename_suffix=DESCRIPTION)
+writer.add_graph(model, images.cuda())
+
 max_score = 0
 for i in range(0, EPOCHS):    
     print('\nEpoch: {}'.format(i))
     train_logs = train_epoch.run(train_loader)
-    valid_logs = valid_epoch.run(valid_loader)   
+    valid_logs = valid_epoch.run(valid_loader)
+    writer.add_scalars('Loss', {'train_loss':train_logs['dice_loss'],
+                                'valid_loss':valid_logs['dice_loss']}, i)
+    writer.add_scalars('IoU', {'train_loss':train_logs['iou_score'],
+                                'valid_loss':valid_logs['iou_score']}, i)
+    writer.add_scalars('Fscore', {'train_loss':train_logs['fscore'],
+                                'valid_loss':valid_logs['fscore']}, i)
+    
     if max_score < valid_logs['iou_score']:
         max_score = valid_logs['iou_score']
         torch.save(model, weight)
         print('Model saved!')        
-    if i == 50:
+    if i == 25:
         optimizer.param_groups[0]['lr'] = 1e-5
         print('Decrease decoder learning rate to 1e-5!')
+
+### Summary writer closing
+writer.close()
 
 ### Test best saved model
 best_model = torch.load(weight)
