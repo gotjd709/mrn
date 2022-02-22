@@ -54,7 +54,7 @@ You can get this data structure by using [util_multi.py](https://github.com/CODi
 
 ##### Train Example
 ```
-python train.py --BASE_PATH './MRN_Data/*/input_y1/*.png' --BACKBONE 'seresnext101' --CLASSES 4 --DESCRIPTION 'MRN_Test'
+python train.py --BASE_PATH './MRN_Data/*/input_y1/*.png' --BACKBONE 'seresnext101' --CLASSES 4 --LOSS_FUNCTION 'diceloss' --DESCRIPTION 'MRN_Test'
 ```
 
 ##### Train Option
@@ -64,6 +64,7 @@ python train.py --BASE_PATH './MRN_Data/*/input_y1/*.png' --BACKBONE 'seresnext1
 - `--CLASSES`: The number of output classes.
 - `--MULTIPLE`: If you want to setting input_x2 mpp=4 with input_x1 mpp=1, you can add this option **2**.
 - `--EPOCHS`: The epochs batch size of training model.
+- `--LOSS_FUNCTION`: Choose the loss function either celoss or diceloss.
 - `--DESCRIPTION`: Add the name of a training model weight.
 
 
