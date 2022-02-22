@@ -9,7 +9,7 @@ and shape (size in pixels), but with an octave based increase of the pixel size,
 micrometers per pixel (mpp). Only the central high resolution patch is segmented
 at the output. - [Feng Gu et al. (2018)](https://arxiv.org/pdf/1807.09607.pdf)
 
-<p align="center"><img src="https://user-images.githubusercontent.com/70703320/147843606-7e371fad-dd9c-4cc7-b34e-007efcc62c63.png" width="60%" height=30%"></p>
+<p align="center"><img src="https://user-images.githubusercontent.com/70703320/147843606-7e371fad-dd9c-4cc7-b34e-007efcc62c63.png" width="60%" height="30%"></p>
 
 ### Environment
 ```
@@ -20,9 +20,10 @@ Above, I install python 3.6 with CUDA 11.4
 # Description
 
 ### Repository Structure
+- `model/mrn.py`: main MRN model script
+- `model/mrn_se_resnext101_32x4d.py`: main MRN model script
 - `datagen.py`: the data dataloader and augmentation script
 - `functional.py`: naming a weight of model and converting outputs to images script 
-- `mrn.py`: main MRN model script
 - `test_view.py`: visualizing outputs script
 - `train.py`: main training script
 
@@ -53,7 +54,7 @@ You can get this data structure by using [util_multi.py](https://github.com/CODi
 
 ##### Train Example
 ```
-python train.py --BASE_PATH './MRN_Data/*/input_y1/*.png' --BACKBONE 'seresnext101' --CLASSES 3 --DESCRIPTION 'MRN_Test'
+python train.py --BASE_PATH './MRN_Data/*/input_y1/*.png' --BACKBONE 'seresnext101' --CLASSES 4 --DESCRIPTION 'MRN_Test'
 ```
 
 ##### Train Option
