@@ -1,4 +1,4 @@
-from mrn                             import mrn
+from model.mrn                             import mrn
 from datagen                         import PathSplit, PathToDataset, TensorData
 from functional                      import name_weight
 from torchsampler                    import ImbalancedDatasetSampler
@@ -14,14 +14,14 @@ import glob
 import os
 import cv2
 
-def test(BASE_PATH, BATCH_SIZE, CLASSES, WEIGHT_PATH):
+def test(BASE_PATH, BATCH_SIZE, CLASSES, WEIGHT_PATH, MULTIPLE):
     ### Using GPU Device
     GPU = True
     device = "cuda" if GPU and torch.cuda.is_available() else "cpu"
     print(f'Using device {device}')
 
     ### Model Setting 
-    model = mrn(in_channels=3, class_num=CLASSES)
+    model = mrn(in_channels=3, class_num=CLASSES, multiple=MULTIPLE)
     # model = torch.nn.DataParallel(model, device_ids=[0,1]) 
     model.cuda()
 
@@ -69,8 +69,9 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--BASE_PATH', type=str, required=True, help='Input the patch path. It should be like ../slideset/patientnum/mask/patches.png.')
     parser.add_argument('--BATCH_SIZE', default=8, type=int, required=False, help='Input the batch size.')
-    parser.add_argument('--CLASSES', default=3, type=int, required=True, help='Input the class of the patches. It should be 1 or >2.')
+    parser.add_argument('--CLASSES', default=4, type=int, required=True, help='Input the class of the patches. It should be 1 or >2.')
     parser.add_argument('--WEIGHT_PATH', default='./', help='Input the Weight path.')
+    parser.add_argument('--MULTIPLE', default=1, help='Input the value of (context_mpp)/(target_mpp*2).')
     args = parser.parse_args()
 
     ### Argparse to Variable
@@ -78,6 +79,7 @@ if __name__ == '__main__':
     BATCH_SIZE = args.BATCH_SIZE
     CLASSES = args.CLASSES
     WEIGHT_PATH = args.WEIGHT_PATH
+    MULTIPLE = args.MULTIPLE
 
     ### Let's test
     test(BASE_PATH, BATCH_SIZE, CLASSES, WEIGHT_PATH)

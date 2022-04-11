@@ -3,21 +3,22 @@ import matplotlib.pyplot          as plt
 import numpy                      as np
 import torch
 import cv2
+import os
 
 def name_weight(frame=None, classes=None, description=None):
     mode = 'binary_class' if classes==1 else 'multi_class'
     if frame == 'tensorflow':
         try:
-            os.makedirs('../../model/tensorflow')
-            return '../../model/tensorflow/' + f'{mode}_mrn_{description}_{date.today()}.h5'
+            os.makedirs('../model/tensorflow', exist_ok = True)
+            return '../model/tensorflow/' + f'{mode}_mrn_{description}_{date.today()}.h5'
         except:
-            return '../../model/tensorflow/' + f'{mode}_mrn_{description}_{date.today()}.h5'
+            return '../model/tensorflow/' + f'{mode}_mrn_{description}_{date.today()}.h5'
     elif frame == 'pytorch':
         try:
-            os.makedirs('../../model/pytorch')
-            return '../../model/pytorch/' + f'{mode}_mrn_{description}_{date.today()}.pth'
+            os.makedirs('../model/pytorch', exist_ok = True)
+            return '../model/pytorch/' + f'{mode}_mrn_{description}_{date.today()}.pth'
         except:
-            return '../../model/pytorch/' + f'{mode}_mrn_{description}_{date.today()}.pth'
+            return '../model/pytorch/' + f'{mode}_mrn_{description}_{date.today()}.pth'
     else:
         raise NameError('Check frame or model. frame should be tensorflow or pytorch. model should be model`s name.')
 

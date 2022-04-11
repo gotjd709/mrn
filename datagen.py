@@ -56,7 +56,7 @@ class PathToDataset(object):
 
     def NumpyDataset(self):
         batch_x = np.zeros((len(self.path_list),) + (2,) + self.image_size + (3,), dtype='float32')
-        batch_y = np.zeros((len(self.path_list),) + self.image_size + (3,), dtype='float32')
+        batch_y = np.zeros((len(self.path_list),) + self.image_size + (4,), dtype='float32')
         for j, path in enumerate(self.path_list):
             img_path1 = path[0]
             img_path2 = path[1]
@@ -67,8 +67,9 @@ class PathToDataset(object):
             batch_y[j][:,:,0] = np.where(mask==0, 1, 0)
             batch_y[j][:,:,1] = np.where(mask==1, 1, 0)
             batch_y[j][:,:,2] = np.where(mask==2, 1, 0)
+            batch_y[j][:,:,3] = np.where(mask==3, 1, 0)
             sample = self.augmentation(image=batch_x[j][0], image1=batch_x[j][1], mask=batch_y[j])
-            batch_x[j][0], batch_x[j][1], batch_y[j] = sample['image'], sample['image1'], sample1['mask']
+            batch_x[j][0], batch_x[j][1], batch_y[j] = sample['image'], sample['image1'], sample['mask']
         print(f'batch_x.shape :: {batch_x.shape}, batch_y.shape :: {batch_y.shape}')
         return batch_x, batch_y, self.path_list
 
@@ -96,7 +97,7 @@ class TensorData(Dataset):
 def train_aug():
     ret = Compose(
         [
-            Oneof([
+            OneOf([
                 HorizontalFlip(p=1),
                 OpticalDistortion(p=1),
                 VerticalFlip(p=1)

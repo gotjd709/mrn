@@ -50,9 +50,11 @@ def train(BASE_PATH, BACKBONE, BATCH_SIZE, CLASSES, MULTIPLE, EPOCHS, LOSS_FUNCT
         # model = torch.nn.DataParallel(model, device_ids=[0,1]) 
         model.cuda()
     elif BACKBONE == 'se_resnext101_32x4d':
-        model = mrn_se_resnext101_32x4d(class_num=CLASSES, pretrained=None, multiple=MULTIPLE)
+        model = mrn_se_resnext101_32x4d(class_num=CLASSES)
         # model = torch.nn.DataParallel(model, device_ids=[0,1]) 
         model.cuda()
+    else: 
+        raise NameError('Please select the backbone within vgg16 or se_resnext101_32x4d')
 
     # Path Setting
     Path = PathSplit(BASE_PATH, MULTIPLE)

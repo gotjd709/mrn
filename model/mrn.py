@@ -2,7 +2,7 @@
 MRN(Multi-Resolution Network)
 description: The same model as the structure in the paper. (https://arxiv.org/pdf/1807.09607.pdf)
 Number of input image: 2 images with the same size and center but with different resolution (Target: high resolution, Context: low resolution)
-size: (2, 3, 284, 284) -> (70, 70)
+size: (2, 3, 512, 512) -> (512, 512)
 """
 from __future__ import print_function, division, absolute_import
 from collections import OrderedDict
