@@ -67,9 +67,8 @@ class PathToDataset(object):
             batch_y[j][:,:,0] = np.where(mask==0, 1, 0)
             batch_y[j][:,:,1] = np.where(mask==1, 1, 0)
             batch_y[j][:,:,2] = np.where(mask==2, 1, 0)
-            sample1 = self.augmentation(image=batch_x[j][0], mask=batch_y[j])
-            sample2 = self.augmentation(image=batch_x[j][1])
-            batch_x[j][0], batch_x[j][1], batch_y[j] = sample1['image'], sample2['image'], sample1['mask']
+            sample = self.augmentation(image=batch_x[j][0], image1=batch_x[j][1], mask=batch_y[j])
+            batch_x[j][0], batch_x[j][1], batch_y[j] = sample['image'], sample['image1'], sample1['mask']
         print(f'batch_x.shape :: {batch_x.shape}, batch_y.shape :: {batch_y.shape}')
         return batch_x, batch_y, self.path_list
 
@@ -95,14 +94,16 @@ class TensorData(Dataset):
         return self.x_data[index], self.y_data[index]
 
 def train_aug():
-    ret = Compose([
-        ElasticTransform(alpha=1, sigma=20, alpha_affine=15, interpolation=1, border_mode=1),
-        GridDistortion(),
-        HorizontalFlip(),
-        OpticalDistortion(),
-        ShiftScaleRotate(),
-        VerticalFlip()
-    ])
+    ret = Compose(
+        [
+            Oneof([
+                HorizontalFlip(p=1),
+                OpticalDistortion(p=1),
+                VerticalFlip(p=1)
+            ], p=0.75)
+        ],
+        additional_targets={'image1':'image'}
+    )
     return ret
 
 def test_aug():
