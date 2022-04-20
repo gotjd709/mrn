@@ -1,6 +1,5 @@
 """
 train.py
-
 Main smp(segmentation_models.pytorch) training for gastric cancer patch image and mask (512X512 10X) script.
 """
 from model.mrn                       import mrn
@@ -61,15 +60,15 @@ def train(BASE_PATH, BACKBONE, BATCH_SIZE, CLASSES, MULTIPLE, EPOCHS, LOSS_FUNCT
     TRAIN_ZIP, VALID_ZIP, TEST_ZIP = Path.Split()
 
     # Dataset, DataLoader Customizing
-    train_dataset = PathToDataset(TRAIN_ZIP, (512,512), augmentation=True)
-    valid_dataset = PathToDataset(VALID_ZIP, (512,512), augmentation=None)
-    test_dataset = PathToDataset(TEST_ZIP, (512,512), augmentation=None)
+    train_dataset = PathToDataset(TRAIN_ZIP, (512,512))
+    valid_dataset = PathToDataset(VALID_ZIP, (512,512))
+    test_dataset = PathToDataset(TEST_ZIP, (512,512))
     train_x, train_y, train_ph = train_dataset.NumpyDataset()
-    train_data = TensorData(train_x, train_y, train_ph)
+    train_data = TensorData(train_x, train_y, train_ph, (512,512), augmentation=True)
     valid_x, valid_y, valid_ph = valid_dataset.NumpyDataset()
-    valid_data = TensorData(valid_x, valid_y, valid_ph)                  
+    valid_data = TensorData(valid_x, valid_y, valid_ph, (512,512), augmentation=None)                  
     test_x, test_y, test_ph = test_dataset.NumpyDataset()
-    test_data = TensorData(test_x, test_y, test_ph)
+    test_data = TensorData(test_x, test_y, test_ph, (512,512), augmentation=None)
 
     ### DataLoader
     train_loader = torch.utils.data.DataLoader(
