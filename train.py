@@ -4,7 +4,7 @@ Main smp(segmentation_models.pytorch) training for gastric cancer patch image an
 """
 from model.mrn                       import mrn
 from model.mrn_se_resnext101_32x4d   import mrn_se_resnext101_32x4d
-from datagen                         import PathSplit, PathToDataset, TensorData
+from datagen                         import PathSplit, TensorData
 from functional                      import name_weight
 from torchsampler                    import ImbalancedDatasetSampler
 from torch.utils.data                import DataLoader
@@ -60,15 +60,9 @@ def train(BASE_PATH, BACKBONE, BATCH_SIZE, CLASSES, MULTIPLE, EPOCHS, LOSS_FUNCT
     TRAIN_ZIP, VALID_ZIP, TEST_ZIP = Path.Split()
 
     # Dataset, DataLoader Customizing
-    train_dataset = PathToDataset(TRAIN_ZIP, (512,512))
-    valid_dataset = PathToDataset(VALID_ZIP, (512,512))
-    test_dataset = PathToDataset(TEST_ZIP, (512,512))
-    train_x, train_y, train_ph = train_dataset.NumpyDataset()
-    train_data = TensorData(train_x, train_y, train_ph, (512,512), augmentation=True)
-    valid_x, valid_y, valid_ph = valid_dataset.NumpyDataset()
-    valid_data = TensorData(valid_x, valid_y, valid_ph, (512,512), augmentation=None)                  
-    test_x, test_y, test_ph = test_dataset.NumpyDataset()
-    test_data = TensorData(test_x, test_y, test_ph, (512,512), augmentation=None)
+    train_data = TensorData(TRAIN_ZIP, (512,512), augmentation=True)
+    valid_data = TensorData(VALID_ZIP, (512,512), augmentation=None)                  
+    test_data = TensorData(TEST_ZIP, (512,512), augmentation=None)
 
     ### DataLoader
     train_loader = torch.utils.data.DataLoader(
@@ -123,28 +117,28 @@ def train(BASE_PATH, BACKBONE, BATCH_SIZE, CLASSES, MULTIPLE, EPOCHS, LOSS_FUNCT
         verbose=True,
     )
     weight = name_weight(frame='pytorch', classes=CLASSES, description=DESCRIPTION)
-    dataiter = iter(train_loader)
-    images, labels = dataiter.next()
+    # dataiter = iter(train_loader)
+    # images, labels = dataiter.next()
 
     ### Using Tensorboard
-    writer = SummaryWriter(log_dir='../../log/MRN_se', filename_suffix=DESCRIPTION)
-    writer.add_graph(model, images.cuda())
+    # writer = SummaryWriter(log_dir='../../log/MRN_se', filename_suffix=DESCRIPTION)
+    # writer.add_graph(model, images.cuda())
 
     max_score = 0
     for i in range(0, EPOCHS):    
         print('\nEpoch: {}'.format(i))
         train_logs = train_epoch.run(train_loader)
         valid_logs = valid_epoch.run(valid_loader)
-        if LOSS_FUNCTION == 'celoss':
-            writer.add_scalars('Loss', {'train_loss':train_logs['reweighted_celoss'],
-                                    'valid_loss':valid_logs['reweighted_celoss']}, i)
-        else:
-            writer.add_scalars('Loss', {'train_loss':train_logs['dice_loss'],
-                            'valid_loss':valid_logs['dice_loss']}, i)
-        writer.add_scalars('IoU', {'train_loss':train_logs['iou_score'],
-                                    'valid_loss':valid_logs['iou_score']}, i)
-        writer.add_scalars('Fscore', {'train_loss':train_logs['fscore'],
-                                    'valid_loss':valid_logs['fscore']}, i)
+        # if LOSS_FUNCTION == 'celoss':
+        #     writer.add_scalars('Loss', {'train_loss':train_logs['reweighted_celoss'],
+        #                             'valid_loss':valid_logs['reweighted_celoss']}, i)
+        # else:
+        #     writer.add_scalars('Loss', {'train_loss':train_logs['dice_loss'],
+        #                     'valid_loss':valid_logs['dice_loss']}, i)
+        # writer.add_scalars('IoU', {'train_loss':train_logs['iou_score'],
+        #                             'valid_loss':valid_logs['iou_score']}, i)
+        # writer.add_scalars('Fscore', {'train_loss':train_logs['fscore'],
+        #                             'valid_loss':valid_logs['fscore']}, i)
         
         if max_score < valid_logs['iou_score']:
             max_score = valid_logs['iou_score']
@@ -155,7 +149,7 @@ def train(BASE_PATH, BACKBONE, BATCH_SIZE, CLASSES, MULTIPLE, EPOCHS, LOSS_FUNCT
             print('Decrease decoder learning rate to 1e-5!')
 
     ### Summary writer closing
-    writer.close()
+    # writer.close()
 
     ### Test best saved model
     best_model = torch.load(weight)

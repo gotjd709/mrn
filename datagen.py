@@ -48,35 +48,11 @@ class PathSplit(object):
             )
         return TRAIN_ZIP, VALID_ZIP, TEST_ZIP
 
-class PathToDataset(object):
-    def __init__(self, path_list, image_size):
-        self.path_list = path_list
-        self.image_size = image_size
-
-    def NumpyDataset(self):
-        batch_x = np.zeros((len(self.path_list),) + (2,) + self.image_size + (3,), dtype='float32')
-        batch_y = np.zeros((len(self.path_list),) + self.image_size + (4,), dtype='float32')
-        for j, path in enumerate(self.path_list):
-            img_path1 = path[0]
-            img_path2 = path[1]
-            mask_path = path[2]
-            mask = cv2.imread(mask_path, 0)
-            batch_x[j][0] = cv2.imread(img_path1)
-            batch_x[j][1] = cv2.imread(img_path2)
-            batch_y[j][:,:,0] = np.where(mask==0, 1, 0)
-            batch_y[j][:,:,1] = np.where(mask==1, 1, 0)
-            batch_y[j][:,:,2] = np.where(mask==2, 1, 0)
-            batch_y[j][:,:,3] = np.where(mask==3, 1, 0)
-        return batch_x, batch_y, self.path_list
-
 
 class TensorData(Dataset):    
-    def __init__(self, x_data, y_data, path_list, image_size, augmentation=None):
-        self.x_data = x_data
-        self.y_data = y_data
+    def __init__(self, path_list, image_size, augmentation=None):
         self.path_list = path_list
         self.image_size = image_size
-        self.len = self.y_data.shape[0]
         self.augmentation = train_aug() if augmentation else test_aug()
         
     def get_labels(self):
@@ -86,17 +62,27 @@ class TensorData(Dataset):
         return label_list
     
     def __len__(self):
-        return self.len
+        return len(self.path_list)
         
     def __getitem__(self, index):
-        sample = self.augmentation(image=self.x_data[index][0], image1=self.x_data[index][1], mask=self.y_data[index])
-        x_data_s = np.zeros((2,) + self.image_size + (3,), dtype='float32')
-        x_data_s[0], x_data_s[1], y_data_s = sample['image'], sample['image1'], sample['mask']
-        x_data_s = torch.FloatTensor(x_data_s)
-        x_data_s = x_data_s.permute(0,3,1,2)
-        y_data_s = torch.FloatTensor(y_data_s)
-        y_data_s = y_data_s.permute(2,0,1)
-        return x_data_s, y_data_s
+        batch_x = np.zeros((1,) + (2,) + self.image_size + (3,), dtype='float32')
+        batch_y = np.zeros((1,) + self.image_size + (4,), dtype='float32')
+        img_path1, img_path2, mask_path = self.path_list[index]
+        batch_x[0][0] = cv2.imread(img_path1)
+        batch_x[0][1] = cv2.imread(img_path2)
+        mask = cv2.imread(mask_path, 0)
+        batch_y[0][:,:,0] = np.where(mask==0, 1, 0)
+        batch_y[0][:,:,1] = np.where(mask==1, 1, 0)
+        batch_y[0][:,:,2] = np.where(mask==2, 1, 0)
+        batch_y[0][:,:,3] = np.where(mask==3, 1, 0)      
+        sample = self.augmentation(image=batch_x[0][0], image1=batch_x[0][1], mask=batch_y[0])
+        data_x = np.zeros((2,) + self.image_size + (3,), dtype='float32')
+        data_x[0], data_x[1], data_y = sample['image'], sample['image1'], sample['mask']
+        data_x = torch.FloatTensor(data_x)
+        data_x = data_x.permute(0,3,1,2)
+        data_y = torch.FloatTensor(data_y)
+        data_y = data_y.permute(2,0,1)
+        return data_x, data_y
 
 def train_aug():
     ret = Compose(

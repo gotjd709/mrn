@@ -54,7 +54,7 @@ You can get this data structure by using [util_multi.py](https://github.com/CODi
 
 ##### Train Example
 ```
-python train.py --BASE_PATH './MRN_Data/*/input_y1/*.png' --BACKBONE 'seresnext101' --CLASSES 4 --LOSS_FUNCTION 'diceloss' --DESCRIPTION 'MRN_Test'
+python train.py --BASE_PATH './MRN_Data/*/input_y1/*.png' --BACKBONE 'vgg16' --CLASSES 4 --LOSS_FUNCTION 'diceloss' --DESCRIPTION 'MRN_Test'
 ```
 
 ##### Train Option
