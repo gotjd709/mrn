@@ -60,9 +60,9 @@ def train(BASE_PATH, BACKBONE, BATCH_SIZE, CLASSES, MULTIPLE, EPOCHS, LOSS_FUNCT
     TRAIN_ZIP, VALID_ZIP, TEST_ZIP = Path.Split()
 
     # Dataset, DataLoader Customizing
-    train_data = TensorData(TRAIN_ZIP, (512,512), augmentation=True)
-    valid_data = TensorData(VALID_ZIP, (512,512), augmentation=None)                  
-    test_data = TensorData(TEST_ZIP, (512,512), augmentation=None)
+    train_data = TensorData(TRAIN_ZIP, (512,512), CLASSES, augmentation=True)
+    valid_data = TensorData(VALID_ZIP, (512,512), CLASSES, augmentation=None)                  
+    test_data = TensorData(TEST_ZIP, (512,512), CLASSES, augmentation=None)
 
     ### DataLoader
     train_loader = torch.utils.data.DataLoader(

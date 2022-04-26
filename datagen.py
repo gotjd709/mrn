@@ -50,9 +50,10 @@ class PathSplit(object):
 
 
 class TensorData(Dataset):    
-    def __init__(self, path_list, image_size, augmentation=None):
+    def __init__(self, path_list, image_size, classes, augmentation=None):
         self.path_list = path_list
         self.image_size = image_size
+        self.classes = classes
         self.augmentation = train_aug() if augmentation else test_aug()
         
     def get_labels(self):
@@ -65,17 +66,15 @@ class TensorData(Dataset):
         return len(self.path_list)
         
     def __getitem__(self, index):
-        batch_x = np.zeros((1,) + (2,) + self.image_size + (3,), dtype='float32')
-        batch_y = np.zeros((1,) + self.image_size + (4,), dtype='float32')
+        batch_x = np.zeros((2,) + self.image_size + (3,), dtype='float32')
+        batch_y = np.zeros(self.image_size + (self.classes,), dtype='float32')
         img_path1, img_path2, mask_path = self.path_list[index]
-        batch_x[0][0] = cv2.imread(img_path1)
-        batch_x[0][1] = cv2.imread(img_path2)
+        batch_x[0] = cv2.imread(img_path1)
+        batch_x[1] = cv2.imread(img_path2)
         mask = cv2.imread(mask_path, 0)
-        batch_y[0][:,:,0] = np.where(mask==0, 1, 0)
-        batch_y[0][:,:,1] = np.where(mask==1, 1, 0)
-        batch_y[0][:,:,2] = np.where(mask==2, 1, 0)
-        batch_y[0][:,:,3] = np.where(mask==3, 1, 0)      
-        sample = self.augmentation(image=batch_x[0][0], image1=batch_x[0][1], mask=batch_y[0])
+        for i in range(int(self.classes)):
+            batch_y[...,i] = np.where(mask==i, 1, 0)    
+        sample = self.augmentation(image=batch_x[0], image1=batch_x[1], mask=batch_y)
         data_x = np.zeros((2,) + self.image_size + (3,), dtype='float32')
         data_x[0], data_x[1], data_y = sample['image'], sample['image1'], sample['mask']
         data_x = torch.FloatTensor(data_x)
