@@ -59,7 +59,7 @@ python train.py --BASE_PATH './MRN_Data/*/input_y1/*.png' --BACKBONE 'vgg16' --C
 
 ##### Train Option
 - `--BASE_PATH`: The path of input_y1 mask patches 
-- `--BACKBONE`: The backbond model of MRN model. You can choose **vgg16** or **seresnext101**
+- `--BACKBONE`: The backbond model of MRN model. You can choose **vgg16** or **se_resnext101_32x4d**
 - `--BATCH_SIZE`: The batch size of training model.
 - `--CLASSES`: The number of output classes.
 - `--MULTIPLE`: If you want to setting input_x2 mpp=4 with input_x1 mpp=1, you can add this option **2**.
