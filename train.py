@@ -3,8 +3,8 @@ train.py
 Main smp(segmentation_models.pytorch) training for gastric cancer patch image and mask (512X512 10X) script.
 """
 from datagen                                                 import dataloader_setting
+from functional                                              import train_epoch, test_epoch
 from config                                                  import *
-from functional                                              import *
 from model.mrn_se_resnext101_32x4d                           import mrn_se_resnext101_32x4d
 from model.mrn                                               import mrn
 from datetime                                                import date
