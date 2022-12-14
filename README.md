@@ -22,10 +22,9 @@ Above, I install python 3.6 with CUDA 11.4
 ### Repository Structure
 - `model/mrn.py`: main MRN model script
 - `model/mrn_se_resnext101_32x4d.py`: main MRN model script
-- `datagen.py`: the data dataloader and augmentation script
-- `functional.py`: naming a weight of model and converting outputs to images script 
-- `test_view.py`: visualizing outputs script
-- `train.py`: main training script
+- `datagen.py`: data dataloader and augmentation script
+- `functional.py`: sub train function script 
+- `train.py`: main train script
 
 ### Training
 
@@ -33,16 +32,16 @@ Above, I install python 3.6 with CUDA 11.4
 ```
 MRN_Data
     ├ slide_num_1
-    |       ├ input_x1
-    |       ├ input_x2
-    |       └ input_y1
+    |       ├ input_x100
+    |       ├ input_x50
+    |       └ input_y100
     .
     .
     .
     └ slide_num_n
-            ├ input_x1
-            ├ input_x2
-            └ input_y1    
+            ├ input_x100
+            ├ input_x50
+            └ input_y100   
 ```
 - input_x1: mpp=1 image patches(512x512) directory
 - input_x2: mpp=2 image patches(512x512) directory
@@ -54,19 +53,9 @@ You can get this data structure by using [util_multi.py](https://github.com/CODi
 
 ##### Train Example
 ```
-python train.py --BASE_PATH './MRN_Data/*/input_y1/*.png' --BACKBONE 'vgg16' --CLASSES 4 --LOSS_FUNCTION 'diceloss' --DESCRIPTION 'MRN_Test'
+python train.py 
 ```
-
-##### Train Option
-- `--BASE_PATH`: The path of input_y1 mask patches 
-- `--BACKBONE`: The backbond model of MRN model. You can choose **vgg16** or **se_resnext101_32x4d**
-- `--BATCH_SIZE`: The batch size of training model.
-- `--CLASSES`: The number of output classes.
-- `--MULTIPLE`: If you want to setting input_x2 mpp=4 with input_x1 mpp=1, you can add this option **2**.
-- `--EPOCHS`: The epochs batch size of training model.
-- `--LOSS_FUNCTION`: Choose the loss function either celoss or diceloss.
-- `--DESCRIPTION`: Add the name of a training model weight.
-
+You can adjust hyper parameters in config.py
 
 # Reference
 
